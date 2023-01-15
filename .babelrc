@@ -1,0 +1,25 @@
+{
+  "presets": [
+    "@babel/preset-typescript",
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "entry",
+        "targets": {
+          "node": "current"
+        }
+      }
+    ]
+  ],
+  "plugins": [
+      "@babel/proposal-class-properties",
+      "@babel/proposal-object-rest-spread"
+  ],
+  "env": {
+    "debug": {
+      "sourceMaps": "inline",
+      "retainLines": true
+    }
+  }
+}
+
