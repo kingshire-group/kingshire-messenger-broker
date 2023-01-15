@@ -1,4 +1,6 @@
 {
+  "author": "Bernoulli Mukuna",
+  "license": "ISC",
   "name": "notification-service",
   "version": "1.0.0",
   "description": "",
@@ -14,8 +16,6 @@
     "type": "git",
     "url": "git@kingshire:kingshire-group/notification-service.git"
   },
-  "author": "Bernoulli Mukuna",
-  "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.20.7",
     "@babel/core": "^7.20.12",
