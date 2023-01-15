@@ -5,10 +5,9 @@
 		"allowJs": true,
 		"noEmit": true,
 		"strict": true,
-		"isolatedModules": true,
+		"isolatedModules": false,
 		"esModuleInterop": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
 	},
 	"include": [
 		"src"
