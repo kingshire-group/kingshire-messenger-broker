@@ -4,13 +4,14 @@
 		"moduleResolution": "node",
 		"allowJs": true,
 		"noEmit": true,
+		"noImplicitAny": false,
 		"strict": true,
 		"isolatedModules": false,
 		"esModuleInterop": true,
     "declaration": true,
 	},
 	"include": [
-		"src"
+		"lib"
 	],
   "exclude": [
       "node_modules"
