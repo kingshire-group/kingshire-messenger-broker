@@ -9,8 +9,8 @@ class Rabbit implements RabbitDriver{
   login: string
   password: string
   connection: any
-  channels: object = {}
-  handlers: object = {}
+  channels: object
+  handlers: object
   connectionTries: number
   maxNumberOfConnectionTries: number
   
@@ -25,6 +25,8 @@ class Rabbit implements RabbitDriver{
    this.password = args.password
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
+   this.channels = {}
+   this.handlers = {}
   }
 
 
