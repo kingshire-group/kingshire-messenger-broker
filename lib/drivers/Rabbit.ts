@@ -5,9 +5,9 @@ import { RabbitCredentials, RabbitDriver } from './interface'
 
 class Rabbit implements RabbitDriver{
   isReconnecting: Boolean
-  endpoint: any
-  login: any
-  password: any
+  endpoint: string
+  login: string
+  password: string
   connection: any
   channels: any
   handlers: any

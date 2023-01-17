@@ -26,7 +26,7 @@ export interface PubSubDriver{
 }
 
 export interface RabbitCredentials{
-  endpoint: any //where the pubsub process is runnign
-  login: any
-  password: any
+  endpoint: string //where the pubsub process is runnign
+  login: string
+  password: string
 }
