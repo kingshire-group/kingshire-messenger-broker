@@ -9,8 +9,8 @@ class Rabbit implements RabbitDriver{
   login: string
   password: string
   connection: any
-  channels: any
-  handlers: any
+  channels: object = {}
+  handlers: object = {}
   connectionTries: number
   maxNumberOfConnectionTries: number
   

@@ -18,6 +18,8 @@ export interface RabbitDriver extends PubSubDriver{
 }
 
 export interface PubSubDriver{
+  channels: object
+  handlers: object
   connect(): Promise<void> | ThisType<this>
   createChannel(channel: string): Promise<void>
   publish(topic:any, message:string): void
