@@ -1,27 +1,30 @@
 const amqplib = require('amqplib/callback_api');
 import Logger from '../logger';
 import { formatMessage, parseMessage} from '../util'
-import { RabbitCredentials, RabbitDriver } from './interface'
+import { RabbitEssentials, RabbitDriver, Exchange } from './interface'
 
 class Rabbit implements RabbitDriver{
   isReconnecting: Boolean
   endpoint: string
   login: string
   password: string
+  exchange: Exchange
   connection: any
   channels: object
   handlers: object
   connectionTries: number
   maxNumberOfConnectionTries: number
   
-  constructor(args: RabbitCredentials){
+  constructor(args: RabbitEssentials){
    if(!args.endpoint) throw new Error('"Endpoint" is required')
    if(!args.login) throw new Error('"login" is required')
    if(!args.password) throw new Error('"password" is required')
+   if(!args.exchange.type) throw new Error('"exchange type" is required')
 
    this.isReconnecting = false
    this.endpoint = args.endpoint
    this.login = args.login
+   this.exchange = args.exchange
    this.password = args.password
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
@@ -96,13 +99,13 @@ class Rabbit implements RabbitDriver{
       Logger.info(`Channel: ${channelName}`)
       for(const handler of this.handlers[channelName]){
         Logger.info(`subscribing for handlers: ${handler.name}`)
-        this.subscribe(channelName, handler, true)
+        this.subscribe(this.exchange.name, channelName, handler, true)
       }
     }
   }
 
-  createChannel = async (channel: string, pubsubMode = true) => {
-    this.channels[channel] = await new Promise((resolve, reject) => {
+  createChannel = async (channelName: string) => {
+    this.channels[channelName] = await new Promise((resolve, reject) => {
       this.connection.createChannel((error: Error, channel: any) => {
         if(error) {
           Logger.error(`Failed to create channel - ${channel}`)
@@ -114,22 +117,22 @@ class Rabbit implements RabbitDriver{
       })
     })
 
-    this.channels[channel].assertExchange(channel, 'fanout', { durable: false})
-    if(!this.handlers[channel]) this.handlers[channel] = []
-    return this.channels[channel]
+    this.channels[channelName].assertExchange(this.exchange.name, this.exchange.type, { durable: true})
+    if(!this.handlers[channelName]) this.handlers[channelName] = []
+    return this.channels[channelName]
   }
 
-  publish = async (exchange: any, message: any) => {
+  publish = async (exchange: string, channelName: string, message: string, routing_key: string) => {
     try {
       const formattedMessage = formatMessage(message)
-      Logger.info(`Publishing message '${formattedMessage?.slice(0, 40)}...' to channel '${exchange}'`)
+      Logger.info(`Publishing message '${formattedMessage?.slice(0, 40)}...' to channel '${channelName}'`)
 
       if(!formattedMessage) throw new Error('Message is empty - ${formatted message}');
-      if(!this.channels[exchange]) throw Error(`Channel for exchange ${exchange} doesn't exist`)
+      if(!this.channels[channelName]) throw Error(`Channel for exchange ${channelName} doesn't exist`)
 
-      this.channels[exchange].publish(exchange, '', Buffer.from(formattedMessage))
+      this.channels[channelName].publish(exchange, routing_key, Buffer.from(formattedMessage))
     } catch (error: any) {
-      if(!this.isReconnecting && error.message === 'Channel closed'){
+      if(!this.isReconnecting && error.message.includes('Channel closed')){
         this.isReconnecting = true
         this.connect();
       }
@@ -138,17 +141,17 @@ class Rabbit implements RabbitDriver{
     }
   }
 
-  subscribe = async (exchange: any, messageHandler: any, isReconnecting = false) => {
+  subscribe = async (exchange: string, channelName: string, messageHandler: any, binding_key: string, isReconnecting = false) => {
     Logger.info('subscribe...')
-    if(!this.channels[exchange]) throw Error (`Channel for Queue ${exchange} does not exists`)
+    if(!this.channels[channelName]) throw Error (`Channel for Queue ${channelName} does not exists`)
 
-    this.channels[exchange].assertQueue('', {exclusive: true}, (error: Error, queue: any) => {
+    this.channels[channelName].assertQueue('', { exclusive: true, durable: true }, (error: Error, queue: any) => {
       if(error) throw error
 
-      Logger.info(`[*] Waiting for messages for ${exchange}. To exit press CTRL+C`)
-      this.channels[exchange].bindQueue(queue.queue, exchange, '')
-      this.channels[exchange].consume(queue.queue, (message: string) => {
-        this._messageHanler({ exchange, message, noAck: true}, messageHandler)
+      Logger.info(`[*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
+      this.channels[channelName].bindQueue(queue.queue, exchange, binding_key)
+      this.channels[channelName].consume(queue.queue, (message: string) => {
+        this._messageHanler({ exchange, message, noAck: true }, messageHandler)
       })
     })
 
@@ -158,7 +161,7 @@ class Rabbit implements RabbitDriver{
   close = () => {
 
   }
-  _messageHanler = async ({exchange: queue, message, noAck = false}, messageHandler: any) => {
+  _messageHanler = async ({exchange: channelName, message, noAck = false}, messageHandler: any) => {
     const messageString = message.content.toString();
     Logger.info(` [x] Received "${messageString.slice(0, 40)}..."`)
     if(typeof messageHandler === 'function') messageHandler(parseMessage(messageString))
@@ -166,8 +169,9 @@ class Rabbit implements RabbitDriver{
 
     setTimeout(() => {
       Logger.info(' [X] Done')
-      this.channels[queue].ack(message)
+      this.channels[channelName].ack(message)
     }, 1000);
   }
 }
+
 export { Rabbit }

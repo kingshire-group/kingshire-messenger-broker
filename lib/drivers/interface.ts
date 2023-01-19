@@ -12,8 +12,8 @@ export interface NotificationDriver{
 }
 
 export interface RabbitDriver extends PubSubDriver{
-  _recreateChannels(): Promise<void>
-  _reassignHandlers(): Promise<void>
+  _recreateChannels(exchange: string): Promise<void>
+  _reassignHandlers(binding_key: string): Promise<void>
   _messageHanler(topic: object, messageHandler: any): Promise<void>
 }
 
@@ -21,14 +21,20 @@ export interface PubSubDriver{
   channels: object
   handlers: object
   connect(): Promise<void> | ThisType<this>
-  createChannel(channel: string): Promise<void>
-  publish(topic:any, message:string): void
-  subscribe(topic: any, messageHandler: any): void
+  createChannel(channel: string, exchange: string): Promise<void>
+  publish(exchange: string, channel: string, message: string, routing_key: string): void
+  subscribe(exchange: string, channel: string, messageHandler: any, binding_key: string): void
   close(): void
 }
 
-export interface RabbitCredentials{
+export interface RabbitEssentials{
   endpoint: string //where the pubsub process is runnign
   login: string
   password: string
+  exchange: Exchange
+}
+
+export interface Exchange{
+  name: string,
+  type: string
 }
