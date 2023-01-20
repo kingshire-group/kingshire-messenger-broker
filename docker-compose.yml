@@ -11,8 +11,12 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+    labels:
+      NAME: "rabbitmq"
+    volumes:
+      - "./etc/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json"
 
 networks:
   notification:
     name: custom_notification
-    driver: custom-driver-1
+    driver: bridge
