@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "esnext",
 		"moduleResolution": "node",
+		"module": "ESNext",
 		"allowJs": true,
 		"noEmit": true,
 		"noImplicitAny": false,
@@ -9,6 +10,10 @@
 		"isolatedModules": false,
 		"esModuleInterop": true,
     "declaration": true,
+	},
+	"ts-node": {
+		"esm": true,
+		"experimentalSpecifierResolution": "node"
 	},
 	"include": [
 		"lib"

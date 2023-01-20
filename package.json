@@ -2,6 +2,7 @@
   "author": "Bernoulli Mukuna",
   "license": "ISC",
   "name": "notification-service",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -10,7 +11,11 @@
     "type-check:watch": "npm run type-check -- --watch",
     "build": "npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline"
+    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "notify": "ts-node examples/notificator/notify.ts",
+    "receive": "ts-node examples/notificator/receive.ts",
+    "publish": "ts-node examples/broadcast/pub.ts",
+    "subscribe": "ts-node examples/broadcast/sub.ts"
   },
   "repository": {
     "type": "git",
