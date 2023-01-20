@@ -1,10 +1,10 @@
-import {  PubSubDriver, instanceOfPubSubDriver } from "./drivers/interface";
+import {  PubSubDriver, instanceOfPubSubDriver, RabbitDriver } from "./drivers/interface";
 
 class PubSub implements PubSubDriver{
   driver: PubSubDriver
   connection: any;
 
-  constructor(args: PubSubDriver){
+  constructor(args: RabbitDriver){
     if (!args) throw new Error('"driver" is required')
     if (!(instanceOfPubSubDriver(args))) throw new Error('Driver does not implement interface of "PubSubDriver"')
     this.driver = args
