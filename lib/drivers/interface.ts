@@ -18,8 +18,6 @@ export interface RabbitDriver extends PubSubDriver{
 }
 
 export interface PubSubDriver{
-  channels: object
-  handlers: object
   connect(): Promise<void> | ThisType<this>
   createChannel(channel: string): Promise<void>
   publish(exchange: string, channel: string, message: string, routing_key: string): void
@@ -28,7 +26,7 @@ export interface PubSubDriver{
 }
 
 export interface RabbitEssentials{
-  endpoint: string //where the pubsub process is runnign
+  endpoint: string
   login: string
   password: string
   exchange: Exchange
