@@ -1,18 +1,20 @@
 import { pubsub } from "./config";
-import { RabbitDriver } from "./drivers/interface";
+import { RabbitDriver, RabbitEssentials } from "./drivers/interface";
 import { Rabbit } from "./drivers/Rabbit";
 import { Notificator } from "./Notificator";
 import { PubSub } from "./PubSub";
 
-const rabbitDriver: RabbitDriver = new Rabbit({
-  endpoint: '',
-  login: '',
-  password: '',
+const rabbitEssentials: RabbitEssentials = {
+  endpoint: pubsub.endpoint,
+  login: pubsub.login,
+  password: pubsub.login,
   exchange: {
-    name: '',
-    type: ''
+    name: 'Direct',
+    type: 'direct'
   }
-})
+}
+
+const rabbitDriver: RabbitDriver = new Rabbit(rabbitEssentials)
 
 const notificationService = new Notificator( 
   new PubSub(rabbitDriver)

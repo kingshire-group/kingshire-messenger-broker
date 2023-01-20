@@ -21,7 +21,7 @@ class PubSub implements PubSubDriver{
  publish = (exchange: string, channel: string, message: string, routing_key: string) => 
   this.driver.publish(exchange, channel, message, routing_key)
 
- subscribe = (exchange: string, channel: string, messageHandler: string, binding_key: string) => 
+ subscribe = (exchange: string, channel: string, messageHandler: any, binding_key: string) => 
   this.driver.subscribe(exchange, channel, messageHandler, binding_key)
 
  close = () => this.driver.close()

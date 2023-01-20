@@ -152,6 +152,7 @@ class Rabbit implements RabbitDriver{
 
       Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
       this.channels[channelName].bindQueue(queue.queue, exchange, binding_key)
+      this.channels[channelName].prefetch(1)
       this.channels[channelName].consume(queue.queue, (message: string) => {
         this._messageHanler({ exchange, message, noAck: true }, messageHandler)
       })
@@ -161,7 +162,8 @@ class Rabbit implements RabbitDriver{
   }
 
   close = () => {
-
+    this.connection.closed()
+    Logger.info('closed connection.')
   }
   _messageHanler = async ({exchange: channelName, message, noAck = false}, messageHandler: any) => {
     const messageString = message.content.toString();
