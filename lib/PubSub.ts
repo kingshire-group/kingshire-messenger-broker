@@ -1,19 +1,31 @@
-import { RabbitDriver, PubSubDriver, instanceOfPubSubDriver } from "./drivers/interface";
+import {  PubSubDriver, instanceOfPubSubDriver } from "./drivers/interface";
 
-/* class PubSub{
-  driver: RabbitDriver
+class PubSub implements PubSubDriver{
+  driver: PubSubDriver
+  connection: any;
 
-  constructor(args: NotificationDriver){
-    if (!args.driver) throw new Error('"driver" is required')
-    if (!(instanceOfPubSubDriver(args.driver))) throw new Error('Driver does not implement interface of "PubSubDriver"')
-    this.driver = args.driver
+  constructor(args: PubSubDriver){
+    if (!args) throw new Error('"driver" is required')
+    if (!(instanceOfPubSubDriver(args))) throw new Error('Driver does not implement interface of "PubSubDriver"')
+    this.driver = args
   }
 
  connect = async () => {
-  * this.connect = await this.driver.connect();
-
-  return this.connection; *
+  this.connection = await this.driver.connect();
+  return this.connection
  }
+
+ createChannel = async (channel:string) => 
+  this.driver.createChannel(channel)
+
+ publish = (exchange: string, channel: string, message: string, routing_key: string) => 
+  this.driver.publish(exchange, channel, message, routing_key)
+
+ subscribe = (exchange: string, channel: string, messageHandler: string, binding_key: string) => 
+  this.driver.subscribe(exchange, channel, messageHandler, binding_key)
+
+ close = () => this.driver.close()
+
 }
 
-export { PubSub } */
+export { PubSub }
