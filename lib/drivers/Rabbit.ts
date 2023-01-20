@@ -1,4 +1,4 @@
-const amqplib = require('amqplib/callback_api');
+import amqplib from 'amqplib/callback_api'
 import Logger from '../logger';
 import { formatMessage, parseMessage} from '../util'
 import { RabbitEssentials, RabbitDriver, Exchange } from './interface'
