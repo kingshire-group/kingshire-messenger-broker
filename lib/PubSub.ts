@@ -1,6 +1,6 @@
-import { NotificationDriver, RabbitDriver, PubSubDriver, instanceOfPubSubDriver } from "./drivers/interface";
+import { RabbitDriver, PubSubDriver, instanceOfPubSubDriver } from "./drivers/interface";
 
-class PubSub{
+/* class PubSub{
   driver: RabbitDriver
 
   constructor(args: NotificationDriver){
@@ -10,10 +10,10 @@ class PubSub{
   }
 
  connect = async () => {
-  /* this.connect = await this.driver.connect();
+  * this.connect = await this.driver.connect();
 
-  return this.connection; */
+  return this.connection; *
  }
 }
 
-export { PubSub }
+export { PubSub } */

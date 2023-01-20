@@ -10,6 +10,7 @@ class Rabbit implements RabbitDriver{
   password: string
   exchange: Exchange
   connection: any
+  binding_key: string
   channels: object
   handlers: object
   connectionTries: number
@@ -24,8 +25,9 @@ class Rabbit implements RabbitDriver{
    this.isReconnecting = false
    this.endpoint = args.endpoint
    this.login = args.login
-   this.exchange = args.exchange
    this.password = args.password
+   this.exchange = args.exchange
+   this.binding_key = ''
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
    this.channels = {}
@@ -99,7 +101,7 @@ class Rabbit implements RabbitDriver{
       Logger.info(`Channel: ${channelName}`)
       for(const handler of this.handlers[channelName]){
         Logger.info(`subscribing for handlers: ${handler.name}`)
-        this.subscribe(this.exchange.name, channelName, handler, true)
+        this.subscribe(this.exchange.name, channelName, handler, this.binding_key, true)
       }
     }
   }
@@ -148,7 +150,7 @@ class Rabbit implements RabbitDriver{
     this.channels[channelName].assertQueue('', { exclusive: true, durable: true }, (error: Error, queue: any) => {
       if(error) throw error
 
-      Logger.info(`[*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
+      Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
       this.channels[channelName].bindQueue(queue.queue, exchange, binding_key)
       this.channels[channelName].consume(queue.queue, (message: string) => {
         this._messageHanler({ exchange, message, noAck: true }, messageHandler)
@@ -163,12 +165,12 @@ class Rabbit implements RabbitDriver{
   }
   _messageHanler = async ({exchange: channelName, message, noAck = false}, messageHandler: any) => {
     const messageString = message.content.toString();
-    Logger.info(` [x] Received "${messageString.slice(0, 40)}..."`)
+    Logger.info(` [*] Received "${messageString.slice(0, 40)}..."`)
     if(typeof messageHandler === 'function') messageHandler(parseMessage(messageString))
     if(noAck) return
 
     setTimeout(() => {
-      Logger.info(' [X] Done')
+      Logger.info(' [*] Done')
       this.channels[channelName].ack(message)
     }, 1000);
   }
