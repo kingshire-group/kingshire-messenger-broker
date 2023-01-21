@@ -1,5 +1,5 @@
 export const pubsub = {
-  endpoint : 'localhost:5672',
-  login    : 'test',
-  password : 'test'
+  endpoint : 'localhost:15672',
+  login    : 'guest',
+  password : 'guest'
 }

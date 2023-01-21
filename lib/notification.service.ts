@@ -9,7 +9,7 @@ const rabbitEssentials: RabbitEssentials = {
   login: pubsub.login,
   password: pubsub.login,
   exchange: {
-    name: 'Direct',
+    name: 'notification',
     type: 'direct'
   }
 }

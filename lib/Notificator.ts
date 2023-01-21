@@ -10,7 +10,7 @@ class Notificator{
   constructor(args: PubSubDriver){
     this.pubsub = args;
     this.isInitialized = false;
-    this.KEY = 'direct.notification'
+    this.KEY = 'joK&IVi-7543$$pOpQE@mmdl'
     this.CHANNEL = 'channel'
   }
 
@@ -35,7 +35,7 @@ class Notificator{
     }
 
     try {
-      this.pubsub?.publish('', this.CHANNEL, message, this.KEY)
+      this.pubsub?.publish('notification', this.CHANNEL, message, this.KEY)
     } catch (error: any) {
       Logger.error(`Failed to notify - ${error.message}`)
       throw error
@@ -49,7 +49,7 @@ class Notificator{
     }
 
     try {
-      this.pubsub?.subscribe('', this.CHANNEL, messageHandler, this.KEY)
+      this.pubsub?.subscribe('notification', this.CHANNEL, messageHandler, this.KEY)
     } catch (error: any) {
       Logger.error(`Receive message failed - ${error.message}`)
       throw error
