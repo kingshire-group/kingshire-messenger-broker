@@ -7,8 +7,12 @@ const receive = async () => {
 }
 
 const processMessage = (messsage: string) => {
-  console.log(` [*] Process this message - ${messsage}`)
-  Logger.info(` [*] Process this message - ${messsage}`)
+  console.log(` [*] Processing this message - ${messsage}`)
+  setTimeout(() => {
+    Logger.info(` [√] Message processed`)
+  }, 5000)
+
+  return
 }
 
 receive();
