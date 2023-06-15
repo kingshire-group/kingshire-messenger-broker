@@ -1,4 +1,4 @@
-import { notificationService } from "../../lib/notification.service";
+import { notificationService } from '../../lib/notification.service'
 
 const notify = async () => {
   var iterator: number = 0
@@ -10,4 +10,4 @@ const notify = async () => {
   }, 5000)
 }
 
-notify();
+notify()

@@ -1,5 +1,5 @@
-import Logger from "../../lib/logger";
-import { notificationService } from "../../lib/notification.service";
+import Logger from '../../lib/logger'
+import { notificationService } from '../../lib/notification.service'
 
 const receive = async () => {
   await notificationService.init()
@@ -15,4 +15,4 @@ const processMessage = (messsage: string) => {
   return
 }
 
-receive();
+receive()

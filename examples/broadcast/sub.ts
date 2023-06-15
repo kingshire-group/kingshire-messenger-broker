@@ -1,8 +1,8 @@
-import { RabbitEssentials } from "../../lib/drivers/interface";
+import { RabbitEssentials } from '../../lib/drivers/interface'
 import { Rabbit } from '../../lib/drivers/Rabbit'
 import { PubSub } from '../../lib/PubSub'
 import { pubsub } from  '../../lib/config' 
-import Logger from "../../lib/logger";
+import Logger from '../../lib/logger'
 
 const CHANNEL = 'channel'
 const KEY = 'personal'

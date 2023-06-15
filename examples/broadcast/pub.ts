@@ -1,4 +1,4 @@
-import { RabbitEssentials } from "../../lib/drivers/interface";
+import { RabbitEssentials } from '../../lib/drivers/interface'
 import { Rabbit } from '../../lib/drivers/Rabbit'
 import { PubSub } from '../../lib/PubSub'
 import { pubsub } from  '../../lib/config' 
@@ -28,9 +28,9 @@ const publisher = async () => {
   rabbitQueue.publish(rabbitEssentials.exchange.name, CHANNEL, MESSAGE, KEY)
 
   setTimeout(() => {
-    rabbitQueue.close();
-    process.exit(0);
-  }, 500);
+    rabbitQueue.close()
+    process.exit(0)
+  }, 500)
 }
 
 publisher()
