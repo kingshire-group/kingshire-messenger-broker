@@ -28,7 +28,7 @@ class Rabbit implements RabbitDriver{
    this.login = args.login
    this.password = args.password
    this.exchange = args.exchange
-   this.queueName = args.queueName
+   this.queueName = ''
    this.binding_key = ''
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
@@ -133,16 +133,18 @@ class Rabbit implements RabbitDriver{
       if(!formattedMessage) throw new Error('Message is empty - ${formatted message}')
       if(!this.channels[channelName]) throw Error(`Channel for exchange ${channelName} doesn't exist`)
 
-      this.channels[channelName].assertQueue('queue', { exclusive: true, durable: true }, (error: Error, queue: any) => {
-        if(error) throw error
+      this.channels[channelName].assertQueue(queueName, 
+        { exclusive: true, durable: true },
+        (error: Error, queue: any) => {
+          if(error) throw error
 
-        this.channels[channelName].bindQueue(queue.queue, exchange, routing_key)
-        this.channels[channelName].publish(
-          exchange, routing_key,
-          Buffer.from(formattedMessage),
-          { mandatory: true, persistent: true, delivery_mode: 2 }
-        )
-      })
+          this.channels[channelName].bindQueue(queue.queue, exchange, routing_key)
+          this.channels[channelName].publish(
+            exchange, routing_key,
+            Buffer.from(formattedMessage),
+            { mandatory: true, persistent: true, delivery_mode: 2 }
+          )
+        })
 
       this.channels[channelName].on('return', (returnedMessage: any) => {
         Logger.error(`Failed to publish - ${returnedMessage.content.toString()}`)

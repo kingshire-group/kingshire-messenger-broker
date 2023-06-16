@@ -30,7 +30,6 @@ export interface RabbitEssentials{
   login: string
   password: string
   exchange: Exchange
-  queueName: string
 }
 
 export interface Exchange{
