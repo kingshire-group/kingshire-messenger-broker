@@ -10,6 +10,7 @@ class Rabbit implements RabbitDriver{
   password: string
   exchange: Exchange
   connection: any
+  queueName: string
   binding_key: string
   channels: object
   handlers: object
@@ -27,6 +28,7 @@ class Rabbit implements RabbitDriver{
    this.login = args.login
    this.password = args.password
    this.exchange = args.exchange
+   this.queueName = args.queueName
    this.binding_key = ''
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
@@ -100,7 +102,7 @@ class Rabbit implements RabbitDriver{
       Logger.info(`Channel: ${channelName}`)
       for(const handler of this.handlers[channelName]){
         Logger.info(`subscribing for handlers: ${handler.name}`)
-        this.subscribe(this.exchange.name, channelName, handler, this.binding_key, true)
+        this.subscribe(this.queueName, channelName, handler)
       }
     }
   }
@@ -123,7 +125,7 @@ class Rabbit implements RabbitDriver{
     return this.channels[channelName]
   }
 
-  publish = async (exchange: string, channelName: string, message: string, routing_key: string) => {
+  publish = async (queueName: string, exchange: string, channelName: string, message: string, routing_key: string) => {
     try {
       const formattedMessage = formatMessage(message)
       Logger.info(`Publishing message '${formattedMessage?.slice(0, 40)}...' to channel '${channelName}'`)
@@ -131,13 +133,20 @@ class Rabbit implements RabbitDriver{
       if(!formattedMessage) throw new Error('Message is empty - ${formatted message}')
       if(!this.channels[channelName]) throw Error(`Channel for exchange ${channelName} doesn't exist`)
 
-      this.channels[channelName].publish(exchange, routing_key, Buffer.from(formattedMessage), { mandatory:true, persistent: true, delivery_mode: 2 })
-      /* this.channels[channelName].on('return', (returnedMessage: any) => {
-        // We will wait for few minutes before trying to publish the message again
-        // After three attempts, if the message still has not been delivered, we will 
-        // send to the CC team to handle.
-        console.log(`Cannot publish message - ${returnedMessage.content.toString()}`)
-      }) */
+      this.channels[channelName].assertQueue('queue', { exclusive: true, durable: true }, (error: Error, queue: any) => {
+        if(error) throw error
+
+        this.channels[channelName].bindQueue(queue.queue, exchange, routing_key)
+        this.channels[channelName].publish(
+          exchange, routing_key,
+          Buffer.from(formattedMessage),
+          { mandatory: true, persistent: true, delivery_mode: 2 }
+        )
+      })
+
+      this.channels[channelName].on('return', (returnedMessage: any) => {
+        Logger.error(`Failed to publish - ${returnedMessage.content.toString()}`)
+      })
     } catch (error: any) {
       if(!this.isReconnecting && error.message.includes('Channel closed')){
         this.isReconnecting = true
@@ -148,11 +157,15 @@ class Rabbit implements RabbitDriver{
     }
   }
 
-  subscribe = async (exchange: string, channelName: string, messageHandler: any, binding_key: string, isReconnecting = false) => {
+  subscribe = async (queueName: string, channelName: string, messageHandler: any, isReconnecting = false) => {
     Logger.info('subscribe...')
     if(!this.channels[channelName]) throw Error (`Channel for Queue ${channelName} does not exists`)
 
-    this.channels[channelName].assertQueue('', { exclusive: true, durable: true }, (error: Error, queue: any) => {
+    this.channels[channelName].prefetch(1)
+    this.channels[channelName].consume(queueName, (message: string) => {
+      this._messageHanler({ channelName, message, noAck: false }, messageHandler)
+    })
+    /* this.channels[channelName].assertQueue('', { exclusive: true, durable: true }, (error: Error, queue: any) => {
       if(error) throw error
 
       Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
@@ -161,7 +174,7 @@ class Rabbit implements RabbitDriver{
       this.channels[channelName].consume(queue.queue, (message: string) => {
         this._messageHanler({ channelName, message, noAck: false }, messageHandler)
       })
-    })
+    }) */
 
     if(!isReconnecting) this.handlers[channelName].push(messageHandler)
   }

@@ -35,7 +35,7 @@ class Notificator{
     }
 
     try {
-      this.pubsub?.publish('notification', this.CHANNEL, message, this.KEY)
+      this.pubsub?.publish('myJOJO', 'notification', this.CHANNEL, message, this.KEY)
     } catch (error: any) {
       Logger.error(`Failed to notify - ${error.message}`)
       throw error
@@ -49,7 +49,7 @@ class Notificator{
     }
 
     try {
-      this.pubsub?.subscribe('notification', this.CHANNEL, messageHandler, this.KEY)
+      this.pubsub?.subscribe('myJOJO', this.CHANNEL, messageHandler)
     } catch (error: any) {
       Logger.error(`Receive message failed - ${error.message}`)
       throw error

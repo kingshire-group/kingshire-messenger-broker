@@ -8,6 +8,7 @@ const rabbitEssentials: RabbitEssentials = {
   endpoint: pubsub.endpoint,
   login: pubsub.login,
   password: pubsub.login,
+  queueName: 'myJoJo',
   exchange: {
     name: 'notification',
     type: 'direct'

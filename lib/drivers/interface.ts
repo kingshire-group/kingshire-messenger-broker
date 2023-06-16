@@ -20,8 +20,8 @@ export interface RabbitDriver extends PubSubDriver{
 export interface PubSubDriver{
   connect(): Promise<void> | ThisType<this>
   createChannel(channel: string): Promise<void>
-  publish(exchange: string, channel: string, message: string, routing_key: string): void
-  subscribe(exchange: string, channel: string, messageHandler: any, binding_key: string): void
+  publish(queueName: string, exchange: string, channel: string, message: string, routing_key: string): void
+  subscribe(queueName: string, channel: string, messageHandler: any): void
   close(): void
 }
 
@@ -30,6 +30,7 @@ export interface RabbitEssentials{
   login: string
   password: string
   exchange: Exchange
+  queueName: string
 }
 
 export interface Exchange{
