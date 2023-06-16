@@ -127,13 +127,14 @@ class Rabbit implements RabbitDriver{
 
   publish = async (queueName: string, exchange: string, channelName: string, message: string, routing_key: string) => {
     try {
+      this.queueName = queueName
       const formattedMessage = formatMessage(message)
       Logger.info(`Publishing message '${formattedMessage?.slice(0, 40)}...' to channel '${channelName}'`)
 
       if(!formattedMessage) throw new Error('Message is empty - ${formatted message}')
       if(!this.channels[channelName]) throw Error(`Channel for exchange ${channelName} doesn't exist`)
 
-      this.channels[channelName].assertQueue(queueName, 
+      this.channels[channelName].assertQueue(this.queueName, 
         { exclusive: true, durable: true },
         (error: Error, queue: any) => {
           if(error) throw error
@@ -161,22 +162,21 @@ class Rabbit implements RabbitDriver{
 
   subscribe = async (queueName: string, channelName: string, messageHandler: any, isReconnecting = false) => {
     Logger.info('subscribe...')
+
     if(!this.channels[channelName]) throw Error (`Channel for Queue ${channelName} does not exists`)
 
-    this.channels[channelName].prefetch(1)
-    this.channels[channelName].consume(queueName, (message: string) => {
-      this._messageHanler({ channelName, message, noAck: false }, messageHandler)
-    })
-    /* this.channels[channelName].assertQueue('', { exclusive: true, durable: true }, (error: Error, queue: any) => {
-      if(error) throw error
+    this.queueName = queueName
+    this.channels[channelName].checkQueue(this.queueName,
+      { ifUnused: true, ifEmpty: true },
+      (error: Error, queue: any) => {
+        if(error) throw error
 
-      Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
-      this.channels[channelName].bindQueue(queue.queue, exchange, binding_key)
-      this.channels[channelName].prefetch(1)
-      this.channels[channelName].consume(queue.queue, (message: string) => {
-        this._messageHanler({ channelName, message, noAck: false }, messageHandler)
+        Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
+        this.channels[channelName].prefetch(1)
+        this.channels[channelName].consume(queue.queue, (message: string) => {
+          this._messageHanler({ channelName, message, noAck: false }, messageHandler)
+        })
       })
-    }) */
 
     if(!isReconnecting) this.handlers[channelName].push(messageHandler)
   }
@@ -185,6 +185,7 @@ class Rabbit implements RabbitDriver{
     this.connection.closed()
     Logger.info('closed connection.')
   }
+
   _messageHanler = async ({ channelName, message, noAck = false }, messageHandler: any) => {
     const messageString = message.content.toString()
     Logger.info(` [*] Received "${messageString.slice(0, 40)}..."`)
@@ -192,7 +193,7 @@ class Rabbit implements RabbitDriver{
     if(noAck) return
 
     setTimeout(() => {
-      //Logger.info(' [*] Done')
+      Logger.info(' [*] Done')
       this.channels[channelName].ack(message)
     }, 1000)
   }
