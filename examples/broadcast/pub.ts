@@ -14,7 +14,8 @@ const publisher = async () => {
     exchange: {
       name: 'Direct',
       type: 'topic'
-    }
+    },
+    queueName: ''
   }
 
   const rabbitQueue = new PubSub(

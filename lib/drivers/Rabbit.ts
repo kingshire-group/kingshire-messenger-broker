@@ -28,7 +28,7 @@ class Rabbit implements RabbitDriver{
    this.login = args.login
    this.password = args.password
    this.exchange = args.exchange
-   this.queueName = ''
+   this.queueName = args.queueName
    this.binding_key = ''
    this.connectionTries = 0
    this.maxNumberOfConnectionTries = 3
@@ -50,7 +50,7 @@ class Rabbit implements RabbitDriver{
         })
       })
     } catch(error) {
-      if(this.connectionTries === this.maxNumberOfConnectionTries) throw error
+      if(this.maximumNumberConnectionRetriesReached()) throw error
 
       else{
         Logger.error(`Connection to RabbitMQ failed - ${this.endpoint}`)
@@ -61,18 +61,24 @@ class Rabbit implements RabbitDriver{
     }
 
     this.connection.on('error', (error: Error) => {
-      if(error.message !== 'Connection closing'){
+      if(error.message !== 'Connection closing' && !this.maximumNumberConnectionRetriesReached()){
         Logger.error('[AMPQ] connection error')
         Logger.error('error')
         this.isReconnecting = true
         return setTimeout(this.connect.bind(this), 5000)
+      } else {
+        throw new Error('Connection to RabbitMQ failed - multiple errors')
       }
     })
 
     this.connection.on('close', () => {
-      Logger.warn('[AMPQ] reconnecting started')
-      this.isReconnecting = true
-      return setTimeout(this.connect.bind(this), 5000)
+      if (!this.maximumNumberConnectionRetriesReached()){
+        Logger.warn('[AMPQ] reconnecting started')
+        this.isReconnecting = true
+        return setTimeout(this.connect.bind(this), 5000)
+      } else {
+        throw new Error('Connection to RabbitMQ closed!')
+      }
     })
 
     if(this.isReconnecting){
@@ -121,34 +127,31 @@ class Rabbit implements RabbitDriver{
     })
 
     this.channels[channelName].assertExchange(this.exchange.name, this.exchange.type, { durable: true })
+    this.channels[channelName].assertQueue(this.queueName, { exclusive: true, durable: true }, 
+      (error: Error, queue: any) => {
+        if (error) throw error
+        this.channels[channelName].bindQueue(queue.queue, 'notification', 'joK&IVi-7543$$pOpQE@mmdl')
+      })
     if(!this.handlers[channelName]) this.handlers[channelName] = []
     return this.channels[channelName]
   }
 
-  publish = async (queueName: string, exchange: string, channelName: string, message: string, routing_key: string) => {
+  publish = async (exchange: string, channelName: string, message: string, routing_key: string) => {
     try {
-      this.queueName = queueName
       const formattedMessage = formatMessage(message)
       Logger.info(`Publishing message '${formattedMessage?.slice(0, 40)}...' to channel '${channelName}'`)
 
       if(!formattedMessage) throw new Error('Message is empty - ${formatted message}')
       if(!this.channels[channelName]) throw Error(`Channel for exchange ${channelName} doesn't exist`)
 
-      this.channels[channelName].assertQueue(this.queueName, 
-        { exclusive: true, durable: true },
-        (error: Error, queue: any) => {
-          if(error) throw error
-
-          this.channels[channelName].bindQueue(queue.queue, exchange, routing_key)
-          this.channels[channelName].publish(
-            exchange, routing_key,
-            Buffer.from(formattedMessage),
-            { mandatory: true, persistent: true, delivery_mode: 2 }
-          )
-        })
+      this.channels[channelName].publish(
+        exchange, routing_key,
+        Buffer.from(formattedMessage),
+        { mandatory: true, persistent: true, delivery_mode: 2 }
+      )
 
       this.channels[channelName].on('return', (returnedMessage: any) => {
-        Logger.error(`Failed to publish - ${returnedMessage.content.toString()}`)
+        Logger.error(`Failed to publish - ${returnedMessage.content.toString().slice(0, 40)}...`)
       })
     } catch (error: any) {
       if(!this.isReconnecting && error.message.includes('Channel closed')){
@@ -160,25 +163,24 @@ class Rabbit implements RabbitDriver{
     }
   }
 
-  subscribe = async (queueName: string, channelName: string, messageHandler: any, isReconnecting = false) => {
+  subscribe = async (channelName: string, messageHandler: any, isReconnecting = false) => {
     Logger.info('subscribe...')
 
     if(!this.channels[channelName]) throw Error (`Channel for Queue ${channelName} does not exists`)
 
-    this.queueName = queueName
-    this.channels[channelName].checkQueue(this.queueName,
-      { ifUnused: true, ifEmpty: true },
-      (error: Error, queue: any) => {
-        if(error) throw error
-
-        Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
-        this.channels[channelName].prefetch(1)
-        this.channels[channelName].consume(queue.queue, (message: string) => {
-          this._messageHanler({ channelName, message, noAck: false }, messageHandler)
-        })
+    this.channels[channelName].checkQueue(this.queueName, (error: Error, queue: any) => {
+      if(error || !queue) {
+        Logger.error('[AMQP] CheckQueue: an error occured: "' + error.stack + '"');
+        throw error
+      }
+      Logger.info(` [*] Waiting for messages for ${channelName}. To exit press CTRL+C`)
+      this.channels[channelName].prefetch(1)
+      this.channels[channelName].consume(queue.queue, (message: string) => {
+        this._messageHanler({ channelName, message, noAck: false }, messageHandler)
       })
+    })
 
-    if(!isReconnecting) this.handlers[channelName].push(messageHandler)
+    //if(!isReconnecting) this.handlers[channelName].push(messageHandler)
   }
 
   close = () => {
@@ -197,6 +199,8 @@ class Rabbit implements RabbitDriver{
       this.channels[channelName].ack(message)
     }, 1000)
   }
+
+  maximumNumberConnectionRetriesReached = () => this.connectionTries > this.maxNumberOfConnectionTries
 }
 
 export { Rabbit }

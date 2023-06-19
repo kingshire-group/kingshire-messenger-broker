@@ -18,11 +18,11 @@ class PubSub implements PubSubDriver{
  createChannel = async (channel:string) => 
   this.driver.createChannel(channel)
 
- publish = (queueName: string, exchange: string, channel: string, message: string, routing_key: string) => 
-  this.driver.publish(queueName, exchange, channel, message, routing_key)
+ publish = (exchange: string, channel: string, message: string, routing_key: string) => 
+  this.driver.publish(exchange, channel, message, routing_key)
 
- subscribe = (queueName: string, channel: string, messageHandler: any) => 
-  this.driver.subscribe(queueName, channel, messageHandler)
+ subscribe = (channel: string, messageHandler: any) => 
+  this.driver.subscribe(channel, messageHandler)
 
  close = () => this.driver.close()
 

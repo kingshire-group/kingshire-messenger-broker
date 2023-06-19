@@ -11,7 +11,8 @@ const rabbitEssentials: RabbitEssentials = {
   exchange: {
     name: 'notification',
     type: 'direct'
-  }
+  },
+  queueName: 'some_queue'
 }
 
 const rabbitDriver: RabbitDriver = new Rabbit(rabbitEssentials)

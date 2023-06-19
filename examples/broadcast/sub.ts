@@ -15,7 +15,8 @@ const subscriber = async () => {
     exchange: {
       name: 'Direct',
       type: 'direct'
-    }
+    },
+    queueName: ''
   }
 
   const rabbitQueue = new PubSub(
@@ -24,7 +25,7 @@ const subscriber = async () => {
   await rabbitQueue.connect()
   await rabbitQueue.createChannel('tasks')
 
-  rabbitQueue.subscribe(rabbitEssentials.exchange.name, CHANNEL, processMessage, KEY)
+  rabbitQueue.subscribe(CHANNEL, processMessage)
 }
 
 const processMessage = (messsage: string) => {
